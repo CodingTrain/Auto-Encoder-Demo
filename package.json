@@ -1,0 +1,15 @@
+{
+  "name": "autoencoder-tf-demo",
+  "version": "0.0.1",
+  "description": "Coding Train attempts Autoencoders",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^3.11.0"
+  }
+}
