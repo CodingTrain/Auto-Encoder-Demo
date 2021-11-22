@@ -15,11 +15,11 @@ async function main() {
   const images = await loadImages(550);
 
   // train the model
-  const x_train = tf.tensor2d(images.slice(500));
+  const x_train = tf.tensor2d(images.slice(0, 500));
   await trainModel(autoencoder, x_train, 250);
 
   // test the model
-  const x_test = tf.tensor2d(images.slice(500, 550));
+  const x_test = tf.tensor2d(images.slice(500));
   await generateTests(autoencoder, x_test);
 }
 
