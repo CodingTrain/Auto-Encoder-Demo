@@ -55,6 +55,8 @@ async function generateTests(autoencoder, x_test) {
 function buildModel() {
   const autoencoder = tf.sequential();
   // Build the model
+
+  // Encoder
   autoencoder.add(
     tf.layers.dense({
       units: 256,
@@ -69,6 +71,7 @@ function buildModel() {
     })
   );
 
+  // Decoder
   autoencoder.add(
     tf.layers.dense({
       units: 256,
