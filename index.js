@@ -6,20 +6,23 @@ import * as tf from "@tensorflow/tfjs-node";
 import Jimp from "jimp";
 import numeral from "numeral";
 
+const W = 56;
+
 main();
 
 async function main() {
   // Build the model
   const autoencoder = buildModel();
   // load all image data
-  const images = await loadImages(550);
-
+  const images = await loadImages(1100);
   // train the model
-  const x_train = tf.tensor2d(images.slice(0, 500));
-  await trainModel(autoencoder, x_train, 250);
+  const x_train = tf.tensor2d(images.slice(0, 1000));
+  await trainModel(autoencoder, x_train, 100);
+  const saveResults = await autoencoder.save("file://public/model/");
 
+  // const autoencoder = await tf.loadLayersModel("file://model/model.json");
   // test the model
-  const x_test = tf.tensor2d(images.slice(500));
+  const x_test = tf.tensor2d(images.slice(1000));
   await generateTests(autoencoder, x_test);
 }
 
@@ -41,11 +44,11 @@ async function generateTests(autoencoder, x_test) {
     const image = new Jimp(
       {
         data: Buffer.from(buffer),
-        width: 28,
-        height: 28,
+        width: W,
+        height: W,
       },
       (err, image) => {
-        const num = numeral(i).format("000");
+        const num = numeral(i).format("0000");
         image.write(`output/square${num}.png`);
       }
     );
@@ -60,7 +63,7 @@ function buildModel() {
   autoencoder.add(
     tf.layers.dense({
       units: 256,
-      inputShape: [784],
+      inputShape: [W * W],
       activation: "relu",
     })
   );
@@ -70,8 +73,22 @@ function buildModel() {
       activation: "relu",
     })
   );
+  autoencoder.add(
+    tf.layers.dense({
+      units: 8,
+      activation: "relu",
+    })
+  );
+
+  // How do I start from here?
 
   // Decoder
+  autoencoder.add(
+    tf.layers.dense({
+      units: 128,
+      activation: "sigmoid",
+    })
+  );
   autoencoder.add(
     tf.layers.dense({
       units: 256,
@@ -81,7 +98,7 @@ function buildModel() {
 
   autoencoder.add(
     tf.layers.dense({
-      units: 784,
+      units: W * W,
       activation: "sigmoid",
     })
   );
@@ -105,11 +122,13 @@ async function trainModel(autoencoder, x_train, epochs) {
 async function loadImages(total) {
   const allImages = [];
   for (let i = 0; i < total; i++) {
-    const num = numeral(i).format("000");
-    const img = await Jimp.read(`data/square${num}.png`);
+    const num = numeral(i).format("0000");
+    const img = await Jimp.read(
+      `AutoEncoder_TrainingData/data/square${num}.png`
+    );
 
     let rawData = [];
-    for (let n = 0; n < 28 * 28; n++) {
+    for (let n = 0; n < W * W; n++) {
       let index = n * 4;
       let r = img.bitmap.data[index + 0];
       // let g = img.bitmap.data[n + 1];
