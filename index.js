@@ -1,6 +1,6 @@
 console.log("Hello Autoencoder 🚂");
 
-import * as tf from "@tensorflow/tfjs-node";
+import * as tf from "@tensorflow/tfjs-node-gpu";
 // import canvas from "canvas";
 // const { loadImage } = canvas;
 import Jimp from "jimp";
@@ -11,16 +11,17 @@ const W = 28;
 main();
 
 async function main() {
-  // Build the model
-  const { decoderLayers, autoencoder } = buildModel();
-  // load all image data
-  const images = await loadImages(5100);
-  // train the model
-  const x_train = tf.tensor2d(images.slice(0, 5000));
-  await trainModel(autoencoder, x_train, 200);
-  const saveResults = await autoencoder.save("file://public/model/");
 
-  console.log(autoencoder.summary());
+  console.log(`Using backend: ${tf.getBackend()}`)
+
+  // Build the model
+  const { decoder, autoencoder } = buildModel();
+  // load all image data
+  const images = await loadImages(7000);
+  // train the model
+  const x_train = tf.tensor2d(images.slice(0, 5600));
+  await trainModel(autoencoder, x_train, 15);
+  const saveResults = await autoencoder.save("file://public/model/");
 
   // const autoencoder = await tf.loadLayersModel("file://public/model/model.json");
   // test the model
@@ -28,7 +29,7 @@ async function main() {
   await generateTests(autoencoder, x_test);
 
   // Create a new model with just the decoder
-  const decoder = createDecoder(decoderLayers);
+  //const decoder = createDecoder(decoder);
   const saveDecoder = await decoder.save("file://public/decoder/model/");
 }
 
@@ -61,19 +62,10 @@ async function generateTests(autoencoder, x_test) {
   }
 }
 
-function createDecoder(decoderLayers) {
-  const decoder = tf.sequential();
-  for (let layer of decoderLayers) {
-    const newLayer = tf.layers.dense({
-      units: layer.units,
-      activation: layer.activation,
-      inputShape: [layer.kernel.shape[0]],
-    });
-    decoder.add(newLayer);
-    newLayer.setWeights(layer.getWeights());
-  }
-  // const learningRate = 0.000001;
-  // const optimizer = tf.train.adam(learningRate);
+function createDecoder(decoder) {
+
+   const learningRate = 0.0001;
+   const optimizer = tf.train.adam(learningRate, 0.0000001); // adam(learning_rate, decay)
   decoder.compile({
     optimizer: "adam",
     loss: "meanSquaredError",
@@ -82,87 +74,51 @@ function createDecoder(decoderLayers) {
 }
 
 function buildModel() {
-  const autoencoder = tf.sequential();
-  // Build the model
 
-  // Encoder
-  autoencoder.add(
-    tf.layers.dense({
-      units: 256,
-      inputShape: [W * W],
-      activation: "relu",
-    })
-  );
-  autoencoder.add(
-    tf.layers.dense({
-      units: 128,
-      activation: "relu",
-    })
-  );
-  autoencoder.add(
-    tf.layers.dense({
-      units: 64,
-      activation: "relu",
-    })
-  );
-  autoencoder.add(
-    tf.layers.dense({
-      units: 16,
-      activation: "relu",
-    })
-  );
-  autoencoder.add(
-    tf.layers.dense({
-      units: 4,
-      activation: "sigmoid",
-    })
-  );
-  // How do I start from here?
-  // Decoder
 
-  let decoderLayers = [];
-  decoderLayers.push(
-    tf.layers.dense({
-      units: 16,
-      activation: "relu",
-    })
-  );
-  decoderLayers.push(
-    tf.layers.dense({
-      units: 64,
-      activation: "relu",
-    })
-  );
-  decoderLayers.push(
-    tf.layers.dense({
-      units: 128,
-      activation: "relu",
-    })
-  );
-  decoderLayers.push(
-    tf.layers.dense({
-      units: 256,
-      activation: "relu",
-    })
-  );
-  decoderLayers.push(
-    tf.layers.dense({
-      units: W * W,
-      activation: "sigmoid",
-    })
-  );
+// encoder
+  const encoder_input = tf.input({shape: [W*W], name: "encoder_input"});
+ // const l0 = tf.layers.flatten().apply(encoder_input);
+  const l1 = tf.layers.dense({units: 128, activation: "relu"}).apply(encoder_input);
+  const l2 = tf.layers.dense({units: 64, activation: "relu"}).apply(l1);
+  const l3 = tf.layers.dense({units: 16, activation: "relu"}).apply(l2);
+  const l4 = tf.layers.dense({units: 4, activation: "relu"}).apply(l3);
+  let encoded = tf.layers.dense({units: 2, activation: "relu", name: "encoder_output"}).apply(l4);
+  
+  let encoder = tf.model({inputs: encoder_input, outputs: encoded, name: "encoder"});
+  console.log(`Encoder Summary: ${encoder.summary()}`);
 
-  for (let layer of decoderLayers) {
-    autoencoder.add(layer);
-  }
+  const decoder_input = tf.input({shape: [2]});
+  let decoder = tf.layers.dense({units: 4, activation: "relu", name: "decoder_input"}).apply(decoder_input);
+  const l6 = tf.layers.dense({units: 16, activation: "relu"}).apply(decoder);
+  const l7 = tf.layers.dense({units: 64, activation: "relu"}).apply(l6);
+  const l8 = tf.layers.dense({units: 128, activation: "relu"}).apply(l7);
+  let decoded = tf.layers.dense({units: 784, activation: "sigmoid", name: "decoder_output"}).apply(l8);
 
-  // const learningRate = 0.001;
-  // const optimizer = tf.train.adam(learningRate);
+  decoder = tf.model({inputs: decoder_input, outputs: decoded, name: "decoder"});
+  console.log(`Decoder Summary: ${decoder.summary()}`);
+
+
+  const auto = tf.input({shape: [W*W]});
+  encoded = encoder.apply(auto);
+  decoded = decoder.apply(encoded);
+
+  const autoencoder = tf.model({inputs: auto, outputs: decoded, name: "autoencoder"});
+  console.log(`Autoencoder Summary: ${autoencoder.summary()}`);
+
+ 
+  const learningRate = 0.0001;
+  const optimizer = tf.train.adam(learningRate, 0.000001); // adam(learning_rate, decay)
+  
   autoencoder.compile({
     optimizer: "adam",
     loss: "meanSquaredError",
   });
-  return { decoderLayers, autoencoder };
+  decoder.compile({
+    optimizer: "adam",
+    loss: "meanSquaredError"
+  });
+  return { decoder, autoencoder};
 }
 
 async function trainModel(autoencoder, x_train, epochs) {
@@ -171,6 +127,7 @@ async function trainModel(autoencoder, x_train, epochs) {
     batch_size: 32,
     shuffle: true,
     verbose: true,
+    validation_split: 0.1
   });
 }
 
@@ -179,7 +136,7 @@ async function loadImages(total) {
   for (let i = 0; i < total; i++) {
     const num = numeral(i).format("0000");
     const img = await Jimp.read(
-      `AutoEncoder_TrainingData/data/square${num}.png`
+      `data/square${num}.png`
     );
 
     let rawData = [];
