@@ -17,7 +17,7 @@ async function main() {
   const images = await loadImages(1100);
   // train the model
   const x_train = tf.tensor2d(images.slice(0, 1000));
-  await trainModel(autoencoder, x_train, 100);
+  await trainModel(autoencoder, x_train, 50);
   const saveResults = await autoencoder.save("file://public/model/");
 
   // const autoencoder = await tf.loadLayersModel("file://model/model.json");
@@ -82,7 +82,6 @@ function buildModel() {
 
   // How do I start from here?
 
-  // Decoder
   autoencoder.add(
     tf.layers.dense({
       units: 128,
@@ -104,7 +103,7 @@ function buildModel() {
   );
   autoencoder.compile({
     optimizer: "adam",
-    loss: "binaryCrossentropy",
+    loss: "meanSquaredError",
     metrics: ["accuracy"],
   });
   return autoencoder;
