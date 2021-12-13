@@ -4,6 +4,7 @@ let w;
 let sliders = [];
 let outputImg;
 let latentTotal = 4;
+let z = [0.5, 0.5, 0.5, 0.5];
 
 async function setup() {
   createCanvas(280, 280);
@@ -20,9 +21,16 @@ async function setup() {
 }
 
 async function nextImage() {
-  let z = [];
+  // for (let i = 0; i < latentTotal; i++) {
+  //   z[i] = sliders[i].value();
+  // }
+
   for (let i = 0; i < latentTotal; i++) {
-    z[i] = sliders[i].value();
+    // This should be a nice smooth opensimplex noise walk, next time!!!
+    let offset = 0.01;
+    z[i] += random(-offset, offset);
+    z[i] = constrain(z[i], 0, 1);
+    sliders[i].value(z[i]);
   }
   const x_test = tf.tensor2d([z]);
   const output = decoder.predict(x_test);
