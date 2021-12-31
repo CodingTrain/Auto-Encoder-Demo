@@ -1,12 +1,14 @@
 console.log("Hello Autoencoder 🚂");
 
 import * as tf from "@tensorflow/tfjs-node";
-// import canvas from "canvas";
-// const { loadImage } = canvas;
+// // import canvas from "canvas";
+// // const { loadImage } = canvas;
 import Jimp from "jimp";
 import numeral from "numeral";
 
-const W = 28;
+
+const 
+W = 28;
 
 main();
 
@@ -14,17 +16,18 @@ async function main() {
   // Build the model
   const { decoderLayers, autoencoder } = buildModel();
   // load all image data
-  const images = await loadImages(5100);
-  // train the model
-  const x_train = tf.tensor2d(images.slice(0, 5000));
-  await trainModel(autoencoder, x_train, 200);
+  const images = await loadImages(110);
+  
+ // train the model
+  const x_train = tf.tensor2d(images.slice(0, 100));
+  await trainModel(autoencoder, x_train, 10);
   const saveResults = await autoencoder.save("file://public/model/");
 
   console.log(autoencoder.summary());
 
   // const autoencoder = await tf.loadLayersModel("file://public/model/model.json");
   // test the model
-  const x_test = tf.tensor2d(images.slice(5000));
+  const x_test = tf.tensor2d(images.slice(10));
   await generateTests(autoencoder, x_test);
 
   // Create a new model with just the decoder
@@ -34,7 +37,7 @@ async function main() {
 
 async function generateTests(autoencoder, x_test) {
   const output = autoencoder.predict(x_test);
-  // output.print();
+  output.print();
 
   const newImages = await output.array();
   for (let i = 0; i < newImages.length; i++) {
@@ -47,6 +50,7 @@ async function generateTests(autoencoder, x_test) {
       buffer[n * 4 + 2] = val;
       buffer[n * 4 + 3] = 255;
     }
+  
     const image = new Jimp(
       {
         data: Buffer.from(buffer),
@@ -55,7 +59,7 @@ async function generateTests(autoencoder, x_test) {
       },
       (err, image) => {
         const num = numeral(i).format("0000");
-        image.write(`output/square${num}.png`);
+        image.write(`output/shape${num}.png`);
       }
     );
   }
@@ -88,32 +92,32 @@ function buildModel() {
   // Encoder
   autoencoder.add(
     tf.layers.dense({
-      units: 256,
-      inputShape: [W * W],
+      units: 1568,
+      inputShape: [W * W * 3],
       activation: "relu",
     })
   );
   autoencoder.add(
     tf.layers.dense({
-      units: 128,
+      units: 784,
       activation: "relu",
     })
   );
   autoencoder.add(
     tf.layers.dense({
-      units: 64,
+      units: 392,
       activation: "relu",
     })
   );
   autoencoder.add(
     tf.layers.dense({
-      units: 16,
+      units: 196,
       activation: "relu",
     })
   );
   autoencoder.add(
     tf.layers.dense({
-      units: 4,
+      units: 4*4,
       activation: "sigmoid",
     })
   );
@@ -123,31 +127,31 @@ function buildModel() {
   let decoderLayers = [];
   decoderLayers.push(
     tf.layers.dense({
-      units: 16,
+      units: 16*4,
       activation: "relu",
     })
   );
   decoderLayers.push(
     tf.layers.dense({
-      units: 64,
+      units: 64*4,
       activation: "relu",
     })
   );
   decoderLayers.push(
     tf.layers.dense({
-      units: 128,
+      units: 128*4,
       activation: "relu",
     })
   );
   decoderLayers.push(
     tf.layers.dense({
-      units: 256,
+      units: 256*4,
       activation: "relu",
     })
   );
   decoderLayers.push(
     tf.layers.dense({
-      units: W * W,
+      units: 2352,
       activation: "sigmoid",
     })
   );
@@ -179,18 +183,43 @@ async function loadImages(total) {
   for (let i = 0; i < total; i++) {
     const num = numeral(i).format("0000");
     const img = await Jimp.read(
-      `AutoEncoder_TrainingData/data/square${num}.png`
-    );
+       `public/data/shape${num}.png`)
+      //  .then(img => {
+      //    return img 
+      //    .write('color.jpg');
+      //   })
+      //    .catch(err => {
+      //      console.error(err);
+       
 
-    let rawData = [];
-    for (let n = 0; n < W * W; n++) {
-      let index = n * 4;
-      let r = img.bitmap.data[index + 0];
-      // let g = img.bitmap.data[n + 1];
-      // let b = img.bitmap.data[n + 2];
-      rawData[n] = r / 255.0;
-    }
+//original code pulling only r value 
+    // let rawData = [];
+    // for (let n = 0; n < W * W; n++) {
+    //   let index = n * 4;
+    //   let r = img.bitmap.data[index + 0];
+    //   let g = img.bitmap.data[index + 1];
+    //   let b = img.bitmap.data[index + 2];
+    //   rawData[r] = r / 255.0;
+    //   }
+    //   allImages[i] = rawData;
+    // }  
+    // return allImages;
+    // }
+    
+    const p = [];
+    const rawData = [];
+    img.scan(0,0, img.bitmap.width, img.bitmap.height, function(x,y, idx) {
+      p.push(this.bitmap.data[idx+0])
+      p.push(this.bitmap.data[idx+1])
+      p.push(this.bitmap.data[idx+2])
+    })
+    for (let n = 0; n < W*W*3; n++) {
+        rawData[n] = p[n] / 255.0;
+    };
     allImages[i] = rawData;
+    //console.log(allImages[1]);
   }
   return allImages;
-}
+};
+  
+
