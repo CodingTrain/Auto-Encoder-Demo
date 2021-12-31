@@ -220,6 +220,6 @@ async function loadImages(total) {
     //console.log(allImages[1]);
   }
   return allImages;
-};
+}
   
 
