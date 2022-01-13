@@ -9,10 +9,10 @@ const W = 28;
 // variable for # of colors:  1 for greyscale and 3 for color
 const c = 3;
 
-//const images = await loadImages(2);
+const images = await loadImages(5);
 
 
-main();
+//main();
 
 async function main() {
   // Build the model
@@ -21,28 +21,28 @@ async function main() {
     autoencoder
   } = buildModel();
   // load all image data
-  const images = await loadImages(2);
-console.log(images);
+  const images = await loadImages(50);
+
   // train the model
 
-  // const x_train = images.slice(0, 40);
-  // //const x_train = tf.tensor4d(images.slice(0, 50), [ 1, W, W, c ]);
+  //const x_train = images.slice(0, 40);
+  const x_train = tf.tensor(images.slice(0, 40));//, [40, W, W, c]);
 
-  // //last parameter is number of epochs
-  // await trainModel(autoencoder, x_train, 5);
-  // const saveResults = await autoencoder.save("file://public/model/");
+  //last parameter is number of epochs
+  await trainModel(autoencoder, x_train, 5);
+  const saveResults = await autoencoder.save("file://public/model/");
 
-  // console.log(autoencoder.summary());
+  console.log(autoencoder.summary());
 
-  // // const autoencoder = await tf.loadLayersModel("file://public/model/model.json");
-  // // test the model
-  // const x_test = images.slice(40);
-  // //const x_test = tf.tensor4d(images.slice(50), [1, W, W, c]);
-  // await generateTests(autoencoder, x_test);
+  //const autoencoder = await tf.loadLayersModel("file://public/model/model.json");
+  // test the model
+  const x_test = images.slice(40);
+  //const x_test = tf.tensor4d(images.slice(50), [1, W, W, c]);
+  await generateTests(autoencoder, x_test);
 
-  // // Create a new model with just the decoder
-  // const decoder = createDecoder(decoderLayers);
-  // const saveDecoder = await decoder.save("file://public/decoder/model/");
+  // Create a new model with just the decoder
+  const decoder = createDecoder(decoderLayers);
+  const saveDecoder = await decoder.save("file://public/decoder/model/");
 }
 
 async function generateTests(autoencoder, x_test) {
@@ -243,54 +243,58 @@ async function trainModel(autoencoder, x_train, epochs) {
 }
 
 async function loadImages(total) {
-    const allImages = [];
-    let rawData = [];
-    for (let i = 0; i < total; i++) {
-      const num = numeral(i).format("0000");
-      const img = await Jimp.read(
-          `public/data/shape${num}.png`)
-        .then(img => {
-          return img
-          //.write('color.jpg');
-        })
-        .catch(err => {
-          console.error(err);
-        });
-          
-        // const buffer = tf.buffer([1, W, W, c], 'float32');
-        // img.scan(0, 0, W, W, function(x, y, index) {
-        //   buffer.set(img.bitmap.data[index], 0, y, x, 0);
-        //   buffer.set(img.bitmap.data[index + 1], 0, y, x, 1);
-        //   buffer.set(img.bitmap.data[index + 2], 0, y, x, 2);
-        // });
-        // rawData = tf.tidy(() => tf.image.resizeBilinear(
-        //   buffer.toTensor(), [W, W]).div(255));
-       //rawData = buffer.toTensor().div(255);
-           //console.log(rawData);
-          //  rawData.print();
-          // allImages.push(rawData) 
-          // allImages[i] = rawData;
-      //      return allImages;
-      //      console.log(allImages);
-      // }
+  const allImages = [];
+  let rawData = [];
+  for (let i = 0; i < total; i++) {
+    const num = numeral(i).format("0000");
+    const img = await Jimp.read(
+        `public/data/shape${num}.png`)
+      .then(img => {
+        return img
+        //.write('color.jpg');
+      })
+      .catch(err => {
+        console.error(err);
+      });
 
+    // // Results in 1 value???    
+    //     const buffer = tf.buffer([1, W, W, c], 'float32');
+    //     img.scan(0, 0, W, W, function(x, y, index) {
+    //       buffer.set(img.bitmap.data[index], 0, y, x, 0);
+    //       buffer.set(img.bitmap.data[index + 1], 0, y, x, 1);
+    //       buffer.set(img.bitmap.data[index + 2], 0, y, x, 2);
+    //     });
+    //     // rawData = tf.tidy(() => tf.image.resizeBilinear(
+    //     //   buffer.toTensor(), [W, W]).div(255));
+    //    rawData = buffer.toTensor().div(255);
+    //        //console.log(rawData);
+    //        //rawData.print();
+    //       //allImages.push(rawData) 
+    //     allImages[i] = rawData;
+
+    //   }
+    //   return allImages;
+    //   console.log(allImages);
+    // }
+
+    // results in 1 value???
     //     const values = img.bitmap.data;
-    //       const outShape = [1, img.bitmap.width, img.bitmap.height, 4];
-    //       rawData = tf.tensor4d(values, outShape, 'float32');
-          
+    //       const outShape = [ 1, img.bitmap.width, img.bitmap.height, 4];
+    //       let d = tf.tensor4d(values, outShape, 'float32');
+
     //       // Slice away alpha
-    //       rawData = rawData.slice([0, 0, 0, 0], [1, img.bitmap.width, img.bitmap.height, c]);
-    //       rawData.div(255);
-    //       rawData.print();
-    //       allImages.push(rawData) 
+    //       d = d.slice([0, 0, 0, 0], [1,  img.bitmap.width, img.bitmap.height, c]);
+    //       rawData = d / 255.0;
+    //       allImages[i] = rawData;
+    //       //allImages.push(rawData) 
     //       //console.log(rawData);
-          
-    //       allImages.push(rawData);
+
+
     //       return allImages;
     //       //console.log(allImages);
     //   }
     // }
- // code for reading in bitmap data
+    // code for reading in bitmap data:  results in too many values???
     let rawData = [];
     let rbit = [];
     let gbit = [];
@@ -300,81 +304,69 @@ async function loadImages(total) {
       let r = img.bitmap.data[index + 0];
       let g = img.bitmap.data[index + 1];
       let b = img.bitmap.data[index + 2];
-      // rbit[n] =  r / 255.0;
-      // gbit[n] =  g / 255.0;
-      // bbit[n] =  b / 255.0;
-      
-      // rawData = [rbit, gbit, bbit];
-    
-    
-      // rbit[n] = tf.tensor( r / 255.0);
-      // gbit[n] = tf.tensor( g / 255.0);
-      // bbit[n] = tf.tensor( b / 255.0);
-      
-      //rawData = tf.stack([rbit ,gbit, bbit]);
-      
-      rbit[n] =  r / 255.0;
-      gbit[n] =  g / 255.0;
-      bbit[n] =  b / 255.0;
-    //}
-    
-     
+      // rbit[n] = r / 255.0;
+      // console.log(rbit.length);
+      // gbit[n] = g / 255.0;
+      // bbit[n] = b / 255.0;
+      // rawData.push(rbit);
+      // rawData.push(gbit);
+      // rawData.push(bbit);
+      rawData[n][0] = r;
+      rawData[n][1] = g;
+      rawData[n][2] = b;
     }
     
-    console.log(rawData);
-  
-    // allImages[i] = rawData;
-    // allImages.print();
-    // console.log(allImages);
-    //console.log(tf.memory());
+    console.log(rawData.length);
+    allImages[i] = rawData;
   }
-  
+  console.log(allImages.length);
+  //must return allImages here!!
   return allImages;
-} 
-          
+  //console.log(tf.memory());
+}
 
 
 
 
-        //  this code seems to work comparing results with original
-          // const p = [];
-          // for (let n = 0; n < W * W; n++) {
-          //   let idx = n * 4;
-          //   for (let cidx = 0; cidx < c; cidx++) {
-          //   let d = tf.tensor2d(img.bitmap.data[idx + cidx]);
-          //       p.push(img.bitmap.data[idx + cidx]);
-          //       rawData[n * c + cidx] = p[n * c + cidx] / 255.0;
-          //     }
-          //   }
-          //   console.log(rawData);
-  
-            // allImages[i] = tf.tensor2d(rawData, [1, W * W * c]);
-            // rd = tf.tensor1d(rawData);
-            // allImages = tf.stack(rd);
-            //console.log(allImages[0]); 
-        //   }
-        //   return allImages;
-  
-        // }
+// // this code seems to work comparing results with original
+// const p = [];
+// for (let n = 0; n < W * W; n++) {
+//   let idx = n * 4;
+//   for (let cidx = 0; cidx < c; cidx++) {
+//   let d = tf.tensor2d(img.bitmap.data[idx + cidx]);
+//       p.push(img.bitmap.data[idx + cidx]);
+//       rawData[n * c + cidx] = p[n * c + cidx] / 255.0;
+//     }
+//   }
+//   console.log(rawData);
+
+// allImages[i] = tf.tensor2d(rawData, [1, W * W * c]);
+// rd = tf.tensor1d(rawData);
+// allImages = tf.stack(rd);
+// console.log(allImages[0]); 
+//   }
+//   return allImages;
+
+// }
 
 
 
-          // this code seems to work comparing results with original
-          // const p = [];
-          // for (let n = 0; n < W * W; n++) {
-          //   let idx = n * 4;
-          //   for (let cidx = 0; cidx < c; cidx++) {
-          //     p.push(img.bitmap.data[idx + cidx]);
-          //     rawData[n * c + cidx] = p[n * c + cidx] / 255.0;
-          //   }
-          // }
-          // console.log(rawData);
+// this code seems to work comparing results with original
+// const p = [];
+// for (let n = 0; n < W * W; n++) {
+//   let idx = n * 4;
+//   for (let cidx = 0; cidx < c; cidx++) {
+//     p.push(img.bitmap.data[idx + cidx]);
+//     rawData[n * c + cidx] = p[n * c + cidx] / 255.0;
+//   }
+// }
+// console.log(rawData);
 
-          // allImages[i] = tf.tensor2d(rawData, [1, W * W * c]);
-          // rd = tf.tensor1d(rawData);
-          // allImages = tf.stack(rd);
-          //console.log(allImages[0]); 
-      //   }
-      //   return allImages;
+// allImages[i] = tf.tensor2d(rawData, [1, W * W * c]);
+// rd = tf.tensor1d(rawData);
+// allImages = tf.stack(rd);
+//console.log(allImages[0]); 
+//   }
+//   return allImages;
 
-      // }
+// }
