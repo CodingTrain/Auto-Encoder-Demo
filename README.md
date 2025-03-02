@@ -5,7 +5,7 @@ Exploring autoencoders with p5 and tensorflow js
 * [Autoencoders Live Stream Part 2](https://www.youtube.com/watch?v=SA7W7rlyc3c)
 * [Autoencoders Live Stream Part 3](https://www.youtube.com/watch?v=Ppif4qdW2pE)
 * part 4 coming soon !
-* [Autoencoders explained from Two Minute Papers](https://www.youtube.com/watch?v=nTt_ajul8NY)
+* [Autoencoders explained from Two Minute Papers](https://youtu.be/Rdpbnd0pCiI)
 * [Autoencoders on wikipedia](https://en.wikipedia.org/wiki/Autoencoder)
 * [Building Autoencoders in Keras](https://blog.keras.io/building-autoencoders-in-keras.html)
 
